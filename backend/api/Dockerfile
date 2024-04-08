@@ -23,19 +23,13 @@ ENV GOLANG_PROTOBUF_VERSION v1.5.1
 ENV GRPC_VERSION v1.23.0
 ENV PROTOC_VERSION 3.17.3
 ENV GOBIN=/go/bin
+ENV x86_64=x86_64
+ENV s390x=s390x_64
+ENV ppc64le=ppcle_64
 
 # Install protoc.
 RUN apt-get update -y && apt-get install -y jq sed unzip
-RUN if [ "$TARGETARCH" = "x86_64" ]; then \
-        TARGETARCH="x86_64"; \
-    elif [ "$TARGETARCH" = "ppc64le" ]; then \
-        TARGETARCH="ppcle_64"; \
-    elif [ "$TARGETARCH" = "s390x" ]; then \
-        TARGETARCH="s390_64"; \
-    else \
-        echo "Unsupported architecture: $ARCH"; exit 1; \
-    fi \
-    && curl -L -o protoc.zip https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-${TARGETARCH}.zip
+RUN curl -L -o protoc.zip https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-${TARGETARCH}.zip
 RUN unzip -o protoc.zip -d /usr/ bin/protoc
 RUN unzip -o protoc.zip -d /usr/ 'include/*'
 RUN rm -f protoc.zip
