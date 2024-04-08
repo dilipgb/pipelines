@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+ARG TARGETARCH
+ARG TARGETOS
+
 # Generate client code (go & json) from API protocol buffers
-FROM golang:1.20 as generator
+FROM --platform=$BUILDPLATFORM golang:1.20 as generator
 ENV GRPC_GATEWAY_VERSION v1.9.6
 ENV GO_SWAGGER_VERSION v0.18.0
 ENV GOLANG_PROTOBUF_VERSION v1.5.1
@@ -23,7 +26,16 @@ ENV GOBIN=/go/bin
 
 # Install protoc.
 RUN apt-get update -y && apt-get install -y jq sed unzip
-RUN curl -L -o protoc.zip https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-x86_64.zip
+RUN if [ "$TARGETARCH" = "x86_64" ]; then \
+        TARGETARCH="x86_64"; \
+    elif [ "$TARGETARCH" = "ppc64le" ]; then \
+        TARGETARCH="ppcle_64"; \
+    elif [ "$TARGETARCH" = "s390x" ]; then \
+        TARGETARCH="s390_64"; \
+    else \
+        echo "Unsupported architecture: $ARCH"; exit 1; \
+    fi \
+    && curl -L -o protoc.zip https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-${TARGETARCH}.zip
 RUN unzip -o protoc.zip -d /usr/ bin/protoc
 RUN unzip -o protoc.zip -d /usr/ 'include/*'
 RUN rm -f protoc.zip
@@ -41,8 +53,8 @@ RUN go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@la
 RUN go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@latest
 
 # Download go-swagger binary.
-RUN curl -LO "https://github.com/go-swagger/go-swagger/releases/download/${GO_SWAGGER_VERSION}/swagger_linux_amd64"
-RUN chmod +x swagger_linux_amd64 && mv swagger_linux_amd64 /usr/bin/swagger
+RUN curl -LO "https://github.com/go-swagger/go-swagger/releases/download/${GO_SWAGGER_VERSION}/swagger_linux_${TARGETARCH}"
+RUN chmod +x swagger_linux_${TARGETARCH} && mv swagger_linux_${TARGETARCH} /usr/bin/swagger
 
 # Need protobuf source code for -I in protoc command.
 RUN mkdir golang && cd golang && git clone --depth 1 --branch $GOLANG_PROTOBUF_VERSION https://github.com/golang/protobuf.git
