@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Generate client code (go & json) from API protocol buffers
-FROM --platform=$BUILDPLATFORM golang:1.20 as generator
+FROM golang:1.20 as generator
 ENV GRPC_GATEWAY_VERSION v1.9.6
 ENV GO_SWAGGER_VERSION v0.18.0
 ENV GOLANG_PROTOBUF_VERSION v1.5.1
@@ -23,11 +23,11 @@ ENV GOBIN=/go/bin
 
 # Install protoc.
 RUN apt-get update -y && apt-get install -y jq sed unzip
-RUN set -ex\
-    ; ARCH=$(uname -m) ; echo $ARCH \
-    ; if [ "$ARCH" == "s390x" ] ; then ARCH="s390_64" ; fi \
-    ; if [ "$ARCH" == "s390x" ] ; then ARCH="s390_64" ; elif [ "$ARCH" == "ppc64le" ] ; then ARCH="ppcle_64" ; fi \
-    ; wget -q https://github.com/protocolbuffers/protobuf/releases/download/v24.3/protoc-24.3-linux-$ARCH.zip -O protoc.zip
+RUN set -ex \
+   ; ARCH=$(uname -m) ; echo $ARCH \
+   ; if [ $ARCH = "s390x" ] ; then ARCH="s390_64" \
+   ; elif [ "$ARCH" = "ppc64le" ] ; then ARCH="ppcle_64" ; fi \
+   ; wget -q https://github.com/protocolbuffers/protobuf/releases/download/v24.3/protoc-24.3-linux-$ARCH.zip -O protoc.zip
 RUN unzip -o protoc.zip -d /usr/ bin/protoc
 RUN unzip -o protoc.zip -d /usr/ 'include/*'
 RUN rm -f protoc.zip

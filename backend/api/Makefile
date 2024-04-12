@@ -67,5 +67,4 @@ push: image
 	touch .image-built
 
 image-multiarch: Dockerfile
-	docker buildx build -t $(IMAGE_TAG) ../.. -f Dockerfile \
-	 --platform=$(PLATFORM)
+	docker buildx build -t $(IMAGE_TAG) ../.. -f Dockerfile --platform=$(PLATFORM)
