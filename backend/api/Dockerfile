@@ -22,7 +22,7 @@ ENV PROTOC_VERSION 3.17.3
 ENV GOBIN=/go/bin
 
 # Install protoc.
-RUN apt-get update -y && apt-get install -y jq sed unzip protobuf
+RUN apt-get update -y && apt-get install -y jq sed unzip
 RUN set -ex\
     ; ARCH=$(uname -m) ; echo $ARCH \
     ; if [ "$ARCH" == "s390x" ] ; then ARCH="s390_64" ; fi \
@@ -45,8 +45,10 @@ RUN go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@la
 RUN go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@latest
 
 # Download go-swagger binary.
-RUN curl -LO "https://github.com/go-swagger/go-swagger/releases/download/${GO_SWAGGER_VERSION}/swagger_linux_$(uname -m) "
-RUN chmod +x swagger_linux_$(uname -m) && mv swagger_linux_$(uname -m) /usr/bin/swagger
+RUN set -ex \
+    ; ARCH=$(uname -m) ; echo $ARCH \
+    ; curl -LO "https://github.com/go-swagger/go-swagger/releases/download/${GO_SWAGGER_VERSION}/swagger_linux_$ARCH" \
+    ; chmod +x swagger_linux_$ARCH && mv swagger_linux_$ARCH /usr/bin/swagger
 
 # Need protobuf source code for -I in protoc command.
 RUN mkdir golang && cd golang && git clone --depth 1 --branch $GOLANG_PROTOBUF_VERSION https://github.com/golang/protobuf.git
